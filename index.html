@@ -1,45 +1,859 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>E-JITUPASNA</title>
-  <link rel="icon" href="https://upload.wikimedia.org/wikipedia/commons/9/98/Kota_Bengkulu.png" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aplikasi JITUPASNA - BPBD DKI Jakarta</title>
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts (Roboto & Inter) -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  
   <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      background-color: #eee;
-      overflow: hidden; /* Mencegah scroll ganda */
+    /* --- BPBD THEME VARIABLES --- */
+    :root {
+      --bpbd-orange: #F7941E; 
+      --bpbd-orange-hover: #d67d12;
+      --bpbd-blue: #003366;   
+      --bg-color: #f4f6f9;    
+      --wa-green: #25d366;
     }
 
-    .iframe-container {
-      width: 100%;
-      height: 100dvh; /* Menggunakan dvh agar pas di mobile browser */
+    body { 
+      background-color: var(--bg-color); 
+      font-family: 'Roboto', sans-serif; 
+      color: #333;
+      transition: background-color 0.5s ease;
+      min-height: 100vh;
+    }
+    
+    /* HEADER SECTION */
+    .header-app { 
+      background: linear-gradient(135deg, var(--bpbd-blue) 0%, #001f3f 100%); 
+      color: white; 
+      padding: 30px 20px 60px 20px; 
+      border-bottom-left-radius: 40px; 
+      border-bottom-right-radius: 40px; 
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      position: relative;
       overflow: hidden;
     }
 
-    iframe {
-      display: block;
-      width: 100%;
-      height: 100%;
-      border: none;
+    .header-app::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-image: url('https://www.transparenttextures.com/patterns/cubes.png');
+      opacity: 0.1;
     }
+
+    .main-container {
+      margin-top: -40px;
+      padding-bottom: 100px;
+    }
+    
+    /* CARD STYLING */
+    .card { 
+      border: none; 
+      border-radius: 15px; 
+      box-shadow: 0 5px 15px rgba(0,0,0,0.05); 
+      background: white;
+      transition: transform 0.2s;
+      overflow: hidden;
+    }
+    
+    .card-header-custom {
+      background-color: white;
+      border-bottom: 2px solid var(--bpbd-orange);
+      padding: 20px;
+    }
+
+    /* BUTTONS */
+    .btn-bpbd {
+      background-color: var(--bpbd-orange);
+      color: white;
+      font-weight: 600;
+      border: none;
+      transition: all 0.3s ease;
+    }
+    .btn-bpbd:hover {
+      background-color: var(--bpbd-orange-hover);
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(247, 148, 30, 0.4);
+    }
+
+    /* DASHBOARD SPECIFIC STYLES */
+    .stat-card {
+        transition: transform 0.2s;
+        border-left: 4px solid transparent;
+    }
+    .stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    .stat-icon-wrapper {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+    
+    /* Grid Card */
+    .data-card-img {
+        height: 180px;
+        background-color: #e9ecef;
+        position: relative;
+        overflow: hidden;
+    }
+    .data-card-img img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s;
+    }
+    .card:hover .data-card-img img {
+        transform: scale(1.05);
+    }
+    .status-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        background: rgba(255,255,255,0.9);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    /* Damage Bar */
+    .damage-bar {
+        height: 6px;
+        border-radius: 3px;
+        background-color: #e9ecef;
+        margin-top: 5px;
+        overflow: hidden;
+    }
+    .damage-fill {
+        height: 100%;
+        border-radius: 3px;
+    }
+
+    /* UTILITIES */
+    .hidden { display: none !important; }
+    
+    .loading-overlay { 
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+      background: rgba(255,255,255,0.9); 
+      z-index: 9999; 
+      display: flex; flex-direction: column; justify-content: center; align-items: center; 
+    }
+    
+    .badge-user {
+      background-color: rgba(255,255,255,0.2);
+      padding: 8px 15px;
+      border-radius: 20px;
+      font-weight: normal;
+      font-size: 0.9rem;
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+
+    /* WHATSAPP WIDGET */
+    .wa-float {
+      position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px;
+      background-color: var(--wa-green); color: white; border-radius: 50%;
+      text-align: center; font-size: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      z-index: 1000; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: all 0.3s ease;
+    }
+    .wa-float:hover { transform: scale(1.1); }
   </style>
 </head>
 <body>
-  <div class="iframe-container">
-    <iframe
-      id="app"
-      src="https://script.google.com/macros/s/AKfycbz8bGI7asGb7JPzM6_bAAIv6_5sj7r8sJiGQqgwl5Kgn-uoS6W2UT7WJR4Z3PBgVuObDQ/exec"
-      scrolling="yes"
-      allowfullscreen="true"
-      webkitallowfullscreen="true"
-      mozallowfullscreen="true"
-      allow="fullscreen; camera; microphone; display-capture; geolocation;">
-    </iframe>
+
+  <!-- Loading Spinner -->
+  <div id="loader" class="loading-overlay hidden">
+    <div class="spinner-border text-warning" style="width: 3rem; height: 3rem;" role="status"></div>
+    <div class="mt-3 text-secondary fw-bold">Memproses Data...</div>
   </div>
+
+  <!-- WHATSAPP WIDGET -->
+  <div class="wa-float" onclick="window.open('https://wa.me/6281234567890', '_blank')" title="Hubungi Admin">
+    <i class="fab fa-whatsapp"></i>
+  </div>
+
+  <!-- HEADER -->
+  <div class="header-app text-center">
+    <h2 class="fw-bold text-uppercase mb-2" style="letter-spacing: 2px;">Aplikasi JITUPASNA</h2>
+    <h5 class="fw-light opacity-90 mb-3">Badan Penanggulangan Bencana Daerah</h5>
+    <div class="badge bg-warning text-dark fw-bold px-3 py-2 rounded-pill shadow-sm" id="headerKelurahan">Kelurahan: Memuat...</div>
+    
+    <div id="userInfoArea" class="mt-4 hidden">
+      <span id="userStatus" class="badge-user"><i class="fas fa-user me-1"></i> User</span>
+    </div>
+  </div>
+
+  <div class="container main-container">
+
+    <!-- ================= AUTH SECTION ================= -->
+    <div id="authSection">
+      <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+          <div class="card shadow-lg mt-4">
+            <div class="card-body p-5">
+              <div class="text-center mb-4">
+                <h4 class="text-primary fw-bold" style="color: var(--bpbd-blue) !important;">Selamat Datang</h4>
+                <p class="text-muted small">Sistem Pelaporan Dampak Bencana</p>
+              </div>
+
+              <ul class="nav nav-pills nav-fill mb-4" id="pills-tab" role="tablist">
+                <li class="nav-item">
+                  <button class="nav-link active rounded-pill" id="pills-login-tab" data-bs-toggle="pill" data-bs-target="#pills-login" type="button">Masuk</button>
+                </li>
+                <li class="nav-item">
+                  <button class="nav-link rounded-pill" id="pills-register-tab" data-bs-toggle="pill" data-bs-target="#pills-register" type="button">Daftar</button>
+                </li>
+              </ul>
+              
+              <div class="tab-content">
+                <!-- LOGIN -->
+                <div class="tab-pane fade show active" id="pills-login">
+                  <form id="formLogin">
+                    <div class="mb-3">
+                      <label class="form-label">Email</label>
+                      <input type="email" class="form-control" id="loginEmail" placeholder="contoh@gmail.com" required>
+                    </div>
+                    <div class="mb-4">
+                      <label class="form-label">Password</label>
+                      <input type="password" class="form-control" id="loginPass" placeholder="******" required>
+                    </div>
+                    <button type="submit" class="btn btn-bpbd w-100 py-2 rounded-pill shadow">MASUK APLIKASI</button>
+                  </form>
+                </div>
+                <!-- REGISTER -->
+                <div class="tab-pane fade" id="pills-register">
+                  <form id="formRegister">
+                    <div class="mb-3">
+                      <label class="form-label">Email</label>
+                      <input type="email" class="form-control" id="regEmail" required>
+                    </div>
+                    <div class="mb-3">
+                      <label class="form-label">Password</label>
+                      <input type="password" class="form-control" id="regPass" required>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100 py-2 rounded-pill shadow">BUAT AKUN</button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= APP SECTION ================= -->
+    <div id="appSection" class="hidden">
+      
+      <!-- MENU NAVIGASI UTAMA -->
+      <div class="card p-2 mb-4 shadow mx-auto" style="max-width: 900px; border-radius: 50px; z-index: 10;">
+        <div class="d-flex justify-content-center flex-wrap gap-2 p-1">
+          <button class="btn btn-outline-secondary rounded-pill px-4 flex-grow-1" onclick="showPage('pageInput')">
+            <i class="fas fa-edit me-1"></i> Input Data
+          </button>
+          
+          <!-- TOMBOL DASHBOARD -->
+          <button class="btn btn-bpbd rounded-pill px-4 flex-grow-1" onclick="showPage('pageDashboard')">
+            <i class="fas fa-chart-pie me-1"></i> Dashboard Data
+          </button>
+          
+          <button class="btn btn-outline-secondary rounded-pill px-4 flex-grow-1" onclick="showPage('pageProfile')">
+            <i class="fas fa-user-circle me-1"></i> Profil
+          </button>
+          <button id="btnAdminMenu" class="btn btn-outline-danger rounded-pill px-4 flex-grow-1 hidden" onclick="showPage('pageAdmin')">
+            <i class="fas fa-shield-alt me-1"></i> Admin
+          </button>
+        </div>
+      </div>
+
+      <!-- 1. HALAMAN INPUT DATA -->
+      <div id="pageInput" class="page-view hidden">
+        <!-- Notifikasi Admin -->
+        <div id="adminNotificationArea" class="hidden mb-4">
+           <div class="alert alert-admin shadow-sm" role="alert">
+              <div class="d-flex align-items-center">
+                <div class="bg-warning text-white rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width:40px; height:40px;">
+                  <i class="fas fa-bullhorn"></i>
+                </div>
+                <div>
+                  <h6 class="alert-heading fw-bold mb-1">Informasi Penting</h6>
+                  <span id="txtAdminMessage" style="white-space: pre-line;"></span>
+                </div>
+              </div>
+           </div>
+        </div>
+
+        <div class="card shadow-lg mb-4">
+          <div class="card-header-custom d-flex justify-content-between align-items-center">
+             <h5 class="m-0 fw-bold" style="color: var(--bpbd-blue);"><i class="fas fa-file-alt me-2"></i> Form Data Kerusakan</h5>
+             <span class="badge bg-warning text-dark"><i class="fas fa-exclamation-circle"></i> Nama Wajib Diisi</span>
+          </div>
+          <div class="card-body p-4 p-md-5">
+            <form id="formJitupasna">
+                <!-- FORM INPUT SEDERHANA -->
+                <div class="row g-3 mb-3">
+                  <div class="col-md-6">
+                    <label class="form-label">Nama Pemilik <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control border-warning" name="nama" required>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Alamat Lengkap</label>
+                    <textarea class="form-control" name="alamat" rows="1"></textarea>
+                  </div>
+                  <div class="col-6 col-md-3"><label class="form-label">RT</label><input type="number" class="form-control" name="rt"></div>
+                  <div class="col-6 col-md-3"><label class="form-label">RW</label><input type="number" class="form-control" name="rw"></div>
+                </div>
+                <!-- Dimensi -->
+                <div class="row g-3 mb-3 bg-light p-3 rounded mx-0 border">
+                    <div class="col-6 col-md-3"><label class="form-label">Luas (m)</label><input type="number" class="form-control calc-trigger" id="inpLuas" name="luas"></div>
+                    <div class="col-6 col-md-3"><label class="form-label">Panjang (m)</label><input type="number" class="form-control calc-trigger" id="inpPanjang" name="panjang"></div>
+                    <div class="col-12 col-md-6"><label class="form-label">Total (m²)</label><input type="text" class="form-control fw-bold" id="outUkuran" name="ukuran" readonly></div>
+                </div>
+                <!-- Kerusakan Dropdowns -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6"><label class="form-label">Atap</label><select class="form-select" name="atap"><option value="">- Pilih -</option><option value="Baik - 0%">Baik</option><option value="Sedang - 50%">Sedang</option><option value="Rusak Berat - 100%">Rusak Berat</option></select></div>
+                    <div class="col-md-6"><label class="form-label">Dinding</label><select class="form-select" name="dinding"><option value="">- Pilih -</option><option value="Baik - 0%">Baik</option><option value="Sedang - 50%">Sedang</option><option value="Rusak Berat - 100%">Rusak Berat</option></select></div>
+                    <div class="col-md-6"><label class="form-label">Lantai</label><select class="form-select" name="lantai"><option value="">- Pilih -</option><option value="Baik - 0%">Baik</option><option value="Sedang - 50%">Sedang</option><option value="Rusak Berat - 100%">Rusak Berat</option></select></div>
+                    <div class="col-md-6"><label class="form-label">Pondasi</label><select class="form-select" name="pondasi"><option value="">- Pilih -</option><option value="Baik - 0%">Baik</option><option value="Sedang - 50%">Sedang</option><option value="Rusak Berat - 100%">Rusak Berat</option></select></div>
+                </div>
+                <div class="mb-3"><label class="form-label">Keterangan Lain</label><input type="text" class="form-control" name="keterangan"></div>
+                
+                <!-- Lainnya -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6"><label class="form-label">Legalitas</label><select class="form-select" name="jenisBangunan"><option value="SHM">SHM</option><option value="Girik">Girik</option><option value="Lainnya">Lainnya</option></select></div>
+                    <div class="col-md-6"><label class="form-label">NJOP (Rp)</label><input type="number" class="form-control" name="njop"></div>
+                </div>
+                <div class="mb-4"><label class="form-label">Foto</label><input type="file" class="form-control" id="inpFoto" accept="image/*" multiple><div class="form-text">Opsional. Max 100MB.</div></div>
+                
+                <!-- SosEk (Hidden for brevity but form data handles it) -->
+                <input type="hidden" name="pekerjaan"><input type="hidden" name="penghasilan"><input type="hidden" name="jmlKeluarga"><input type="hidden" name="jmlAnak"><input type="hidden" name="hilangPenghasilan"><input type="hidden" name="asetTerdampak"><input type="hidden" name="kerugianAset">
+
+                <button type="submit" class="btn btn-bpbd btn-lg w-100 rounded-pill shadow">KIRIM LAPORAN</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. HALAMAN DASHBOARD (INTEGRATED) -->
+      <div id="pageDashboard" class="page-view hidden">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="fw-bold text-primary"><i class="fas fa-database me-2"></i>Dashboard Monitoring</h4>
+            <button class="btn btn-outline-primary btn-sm rounded-pill" onclick="loadDashboardData()"><i class="fas fa-sync me-1"></i> Refresh Data</button>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-4">
+                <div class="card p-4 stat-card border-start border-4 border-primary">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <p class="text-muted small text-uppercase fw-bold">Total Laporan</p>
+                            <h3 class="fw-bold mb-0" id="statTotal">...</h3>
+                        </div>
+                        <div class="stat-icon-wrapper bg-primary bg-opacity-10 text-primary">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card p-4 stat-card border-start border-4 border-danger">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <p class="text-muted small text-uppercase fw-bold">Estimasi Kerugian</p>
+                            <h3 class="fw-bold mb-0 text-danger" id="statLoss">...</h3>
+                        </div>
+                        <div class="stat-icon-wrapper bg-danger bg-opacity-10 text-danger">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card p-4 stat-card border-start border-4 border-warning">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <p class="text-muted small text-uppercase fw-bold">Perlu Verifikasi</p>
+                            <h3 class="fw-bold mb-0 text-warning" id="statActive">...</h3>
+                        </div>
+                        <div class="stat-icon-wrapper bg-warning bg-opacity-10 text-warning">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
+            <div class="input-group" style="max-width: 400px;">
+                <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
+                <input type="text" class="form-control border-start-0" id="searchDashboard" placeholder="Cari nama atau alamat..." onkeyup="filterDashboard()">
+            </div>
+            <div class="btn-group shadow-sm">
+                <button class="btn btn-light active" id="btnGridView" onclick="switchView('grid')"><i class="fas fa-th-large"></i> Grid</button>
+                <button class="btn btn-light" id="btnTableView" onclick="switchView('table')"><i class="fas fa-list"></i> List</button>
+            </div>
+        </div>
+
+        <!-- Content Area -->
+        <div id="dashboardContent" class="row g-4">
+            <!-- Data will be injected here via JS -->
+            <div class="col-12 text-center py-5 text-muted">
+                <div class="spinner-border text-primary mb-2"></div>
+                <p>Memuat data...</p>
+            </div>
+        </div>
+      </div>
+
+      <!-- 3. HALAMAN PROFIL -->
+      <div id="pageProfile" class="page-view hidden">
+        <div class="card p-4 mx-auto shadow-lg" style="max-width: 600px;">
+          <h4 class="text-center mb-4 fw-bold" style="color: var(--bpbd-blue);">Pengaturan Akun</h4>
+          <form id="formProfile">
+            <div class="mb-3"><label class="form-label">Nama</label><input type="text" class="form-control" id="profNama"></div>
+            <div class="mb-3"><label class="form-label">Dinas/Instansi</label><input type="text" class="form-control" id="profDinas"></div>
+            <div class="mb-3"><label class="form-label">Kontak</label><input type="number" class="form-control" id="profHp"></div>
+            
+            <!-- Custom Background Feature -->
+            <div class="mb-3 border p-3 rounded">
+                <label class="form-label">Tema Latar Belakang</label>
+                <div class="d-flex gap-2">
+                    <input type="color" class="form-control form-control-color" id="bgColorPicker" value="#f4f6f9">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="resetBackground()">Reset</button>
+                </div>
+            </div>
+
+            <div class="d-grid gap-2 mt-4">
+                <button type="submit" class="btn btn-warning rounded-pill fw-bold">SIMPAN</button>
+                <button type="button" class="btn btn-outline-danger rounded-pill fw-bold" onclick="logout()">KELUAR / LOGOUT</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- 4. HALAMAN ADMIN -->
+      <div id="pageAdmin" class="page-view hidden">
+        <div class="card p-4">
+            <h5 class="fw-bold mb-3 text-primary">Admin Panel</h5>
+            <div class="mb-3">
+                <label>Nama Kelurahan</label>
+                <input type="text" class="form-control" id="admKelurahan">
+            </div>
+            <div class="mb-3">
+                <label>Pesan Broadcast</label>
+                <textarea class="form-control" id="admInfoMsg"></textarea>
+            </div>
+            <button class="btn btn-primary rounded-pill w-100" onclick="adminSaveSettings()">Simpan</button>
+        </div>
+      </div>
+
+    </div> <!-- End App Section -->
+  </div>
+
+  <!-- MODAL DETAIL (DIPERBARUI DENGAN LEBIH BANYAK INFO) -->
+  <div class="modal fade" id="detailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title fw-bold" id="detailModalTitle">Detail Laporan</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-0">
+            <div class="row g-0">
+                <div class="col-md-5 bg-light d-flex align-items-center justify-content-center" style="min-height: 250px;">
+                    <img id="detailImg" src="" class="img-fluid" style="max-height: 300px; width: 100%; object-fit: cover;">
+                </div>
+                <div class="col-md-7 p-4">
+                    <!-- HEADER INFO -->
+                    <div class="d-flex justify-content-between align-items-start mb-3 border-bottom pb-2">
+                        <div>
+                            <small class="text-muted d-block">Pelapor</small>
+                            <h5 class="fw-bold mb-0 text-primary" id="detailNama"></h5>
+                            <small class="text-muted" id="detailTimestamp"></small>
+                        </div>
+                        <span class="badge bg-success" id="detailStatus">Aktif</span>
+                    </div>
+
+                    <!-- LOKASI -->
+                    <div class="mb-3">
+                        <small class="text-muted d-block fw-bold"><i class="fas fa-map-marker-alt me-1"></i> Lokasi</small>
+                        <p class="mb-0" id="detailAlamat"></p>
+                        <div class="mt-1">
+                            <span class="badge bg-secondary me-1" id="detailRT"></span>
+                            <span class="badge bg-secondary" id="detailRW"></span>
+                        </div>
+                    </div>
+
+                    <!-- DETAIL KERUSAKAN -->
+                    <div class="row g-2 mb-3">
+                        <div class="col-4">
+                            <div class="border rounded p-2 text-center bg-light h-100">
+                                <small class="d-block text-muted">Luas</small>
+                                <b id="detailLuas"></b> m²
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="border rounded p-2 text-center bg-light h-100">
+                                <small class="d-block text-muted">Kerugian</small>
+                                <b id="detailRugi" class="text-danger small"></b>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="border rounded p-2 text-center bg-light h-100">
+                                <small class="d-block text-muted">Legalitas</small>
+                                <b id="detailLegalitas" class="small"></b>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PROGRESS BARS -->
+                    <div id="detailDamages" class="mb-3"></div>
+
+                    <!-- TABEL SOSIAL EKONOMI -->
+                    <div class="bg-gray-50 border rounded p-2">
+                        <small class="fw-bold text-muted mb-2 d-block"><i class="fas fa-users me-1"></i> Data Sosial Ekonomi</small>
+                        <table class="table table-sm table-borderless m-0 small">
+                            <tr>
+                                <td class="text-muted w-50">Pekerjaan:</td>
+                                <td class="fw-bold" id="detailPekerjaan">-</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Penghasilan:</td>
+                                <td class="fw-bold" id="detailPenghasilan">-</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Keluarga/Anak:</td>
+                                <td class="fw-bold"><span id="detailJmlKel">-</span> / <span id="detailJmlAnak">-</span></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Aset Terdampak:</td>
+                                <td class="fw-bold" id="detailAset">-</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer bg-light">
+          <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Tutup</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Helper Modal -->
+  <div class="modal fade" id="infoModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-body" id="infoModalBody"></div></div></div></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    let currentUser = null;
+    let allDataCache = []; // Cache for dashboard data
+
+    window.addEventListener('load', () => {
+        const savedSession = localStorage.getItem('jitupasna_session');
+        if (savedSession) {
+            currentUser = JSON.parse(savedSession);
+            initApp();
+        }
+        // Bg color
+        const savedBg = localStorage.getItem('jitupasna_bg_color');
+        if(savedBg) {
+            document.body.style.backgroundColor = savedBg;
+            if(document.getElementById('bgColorPicker')) document.getElementById('bgColorPicker').value = savedBg;
+        }
+    });
+
+    // Background Changer
+    document.getElementById('bgColorPicker')?.addEventListener('input', (e) => {
+        document.body.style.backgroundColor = e.target.value;
+        localStorage.setItem('jitupasna_bg_color', e.target.value);
+    });
+    function resetBackground() {
+        document.body.style.backgroundColor = '#f4f6f9';
+        localStorage.setItem('jitupasna_bg_color', '#f4f6f9');
+        document.getElementById('bgColorPicker').value = '#f4f6f9';
+    }
+
+    function showLoader(show) { document.getElementById('loader').classList.toggle('hidden', !show); }
+    function showModal(msg) { document.getElementById('infoModalBody').innerText = msg; new bootstrap.Modal(document.getElementById('infoModal')).show(); }
+
+    function showPage(pageId) {
+        document.querySelectorAll('.page-view').forEach(el => el.classList.add('hidden'));
+        document.getElementById(pageId).classList.remove('hidden');
+        
+        // Active state for dashboard toggle buttons
+        if(pageId === 'pageDashboard') loadDashboardData();
+        if(pageId === 'pageAdmin') loadUsers();
+        
+        window.scrollTo(0,0);
+    }
+
+    // --- DASHBOARD LOGIC (INTEGRATED) ---
+    function loadDashboardData() {
+        const content = document.getElementById('dashboardContent');
+        content.innerHTML = '<div class="col-12 text-center py-5"><div class="spinner-border text-primary"></div><p>Memuat Data...</p></div>';
+        
+        google.script.run.withSuccessHandler(data => {
+            allDataCache = data;
+            renderDashboard(data);
+        }).getAllDataJitupasna(); // Uses existing backend function
+    }
+
+    function renderDashboard(data) {
+        const content = document.getElementById('dashboardContent');
+        
+        // 1. Calculate Stats
+        const total = data.length;
+        // Index 24 is kerugianAset (based on previous mapping)
+        const loss = data.reduce((acc, row) => acc + (parseFloat(row[24]) || 0), 0);
+        const active = data.length; // Simply count all as active/verified for now
+
+        document.getElementById('statTotal').innerText = total;
+        document.getElementById('statLoss').innerText = (loss / 1000000).toFixed(1) + " Jt";
+        document.getElementById('statActive').innerText = active;
+
+        if(data.length === 0) {
+            content.innerHTML = '<div class="col-12 text-center py-5 text-muted"><i class="fas fa-box-open fa-3x mb-3"></i><p>Belum ada data.</p></div>';
+            return;
+        }
+
+        // 2. Render List based on View Mode (Grid default)
+        const viewMode = document.getElementById('btnGridView').classList.contains('active') ? 'grid' : 'table';
+        
+        if (viewMode === 'grid') {
+            let html = '';
+            data.forEach((row, idx) => {
+                // Map data indices: 3=Nama, 4=Alamat, 5=RT, 6=RW, 9=Total, 17=Foto, 24=Rugi, 25=Status
+                const imgUrl = (row[17] && row[17].includes('http')) ? row[17].split(',')[0] : 'https://placehold.co/600x400?text=No+Image';
+                const status = row[25] || 'Aktif';
+                
+                html += `
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 stat-card">
+                        <div class="data-card-img">
+                            <img src="${imgUrl}" alt="Foto">
+                            <span class="status-badge text-success"><i class="fas fa-check-circle"></i> ${status}</span>
+                        </div>
+                        <div class="card-body">
+                            <h5 class="fw-bold mb-1 text-truncate">${row[3]}</h5>
+                            <p class="text-muted small mb-2"><i class="fas fa-map-marker-alt text-danger"></i> ${row[4]}</p>
+                            <div class="d-flex justify-content-between small text-secondary mb-3">
+                                <span><i class="fas fa-ruler-combined"></i> ${row[9]} m²</span>
+                                <span><i class="fas fa-tag"></i> Rp ${(parseFloat(row[24])||0).toLocaleString()}</span>
+                            </div>
+                            <button class="btn btn-outline-primary w-100 rounded-pill btn-sm" onclick="showDetail(${idx})">Lihat Detail</button>
+                        </div>
+                    </div>
+                </div>`;
+            });
+            content.innerHTML = html;
+        } else {
+            // Table View
+            let html = `
+            <div class="col-12"><div class="card p-0 overflow-hidden"><div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="bg-light"><tr><th>Nama</th><th>Alamat</th><th>Kerusakan</th><th>Kerugian</th><th>Aksi</th></tr></thead>
+                <tbody>`;
+            
+            data.forEach((row, idx) => {
+                const atap = (row[10] || "").split('-')[0];
+                html += `
+                <tr>
+                    <td class="fw-bold">${row[3]}</td>
+                    <td><small>${row[4]}</small></td>
+                    <td><span class="badge bg-light text-dark border">Atap: ${atap}</span></td>
+                    <td>Rp ${(parseFloat(row[24])||0).toLocaleString()}</td>
+                    <td><button class="btn btn-sm btn-primary rounded-pill px-3" onclick="showDetail(${idx})">Detail</button></td>
+                </tr>`;
+            });
+            html += `</tbody></table></div></div></div>`;
+            content.innerHTML = html;
+        }
+    }
+
+    function switchView(mode) {
+        document.getElementById('btnGridView').classList.toggle('active', mode === 'grid');
+        document.getElementById('btnGridView').classList.toggle('btn-light', mode !== 'grid');
+        document.getElementById('btnGridView').classList.toggle('btn-primary', mode === 'grid');
+        
+        document.getElementById('btnTableView').classList.toggle('active', mode === 'table');
+        document.getElementById('btnTableView').classList.toggle('btn-light', mode !== 'table');
+        document.getElementById('btnTableView').classList.toggle('btn-primary', mode === 'table');
+        
+        // Re-render with current filter
+        filterDashboard();
+    }
+
+    function filterDashboard() {
+        const term = document.getElementById('searchDashboard').value.toLowerCase();
+        const filtered = allDataCache.filter(row => 
+            String(row[3]).toLowerCase().includes(term) || // Nama
+            String(row[4]).toLowerCase().includes(term)    // Alamat
+        );
+        renderDashboard(filtered);
+    }
+
+    function showDetail(index) {
+        // Find correct data in cache
+        const term = document.getElementById('searchDashboard').value.toLowerCase();
+        const currentData = allDataCache.filter(row => String(row[3]).toLowerCase().includes(term) || String(row[4]).toLowerCase().includes(term));
+        const d = currentData[index];
+        if(!d) return;
+
+        // --- MAP DATA TO MODAL ---
+        
+        // Basic Info
+        document.getElementById('detailNama').innerText = d[3] || "-";
+        document.getElementById('detailTimestamp').innerText = d[2] ? new Date(d[2]).toLocaleString('id-ID') : "-";
+        document.getElementById('detailAlamat').innerText = d[4] || "-";
+        document.getElementById('detailRT').innerText = `RT ${d[5] || "-"}`;
+        document.getElementById('detailRW').innerText = `RW ${d[6] || "-"}`;
+        
+        // Technical
+        document.getElementById('detailLuas').innerText = d[9] || "0"; 
+        document.getElementById('detailRugi').innerText = "Rp " + (parseFloat(d[24])||0).toLocaleString('id-ID');
+        document.getElementById('detailLegalitas').innerText = d[15] || "-"; // Jenis Bangunan
+        document.getElementById('detailStatus').innerText = d[25] || "Aktif";
+
+        // SosEk
+        document.getElementById('detailPekerjaan').innerText = d[18] || "-";
+        document.getElementById('detailPenghasilan').innerText = "Rp " + (parseFloat(d[19])||0).toLocaleString('id-ID');
+        document.getElementById('detailJmlKel').innerText = d[20] || "0";
+        document.getElementById('detailJmlAnak').innerText = d[21] || "0";
+        document.getElementById('detailAset').innerText = d[23] || "-";
+
+        // Image
+        const img = (d[17] && d[17].includes('http')) ? d[17].split(',')[0] : 'https://placehold.co/600x400?text=No+Foto';
+        document.getElementById('detailImg').src = img;
+
+        // Damage Bars
+        const makeBar = (label, val) => {
+            let pct = 0;
+            if(val && val.includes('100')) pct = 100;
+            else if(val && val.includes('50')) pct = 50;
+            
+            let color = pct > 50 ? 'bg-danger' : (pct > 0 ? 'bg-warning' : 'bg-success');
+            return `<div class="mb-2"><div class="d-flex justify-content-between small"><span>${label}</span><span>${val || "-"}</span></div><div class="progress" style="height:6px"><div class="progress-bar ${color}" style="width:${pct}%"></div></div></div>`;
+        };
+
+        const htmlBars = makeBar('Atap', d[10]) + makeBar('Dinding', d[11]) + makeBar('Lantai', d[12]) + makeBar('Pondasi', d[13]);
+        document.getElementById('detailDamages').innerHTML = htmlBars;
+
+        new bootstrap.Modal(document.getElementById('detailModal')).show();
+    }
+
+    // --- LOGIC LAIN SAMA SEPERTI SEBELUMNYA ---
+    document.getElementById('formLogin').onsubmit = function(e) {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value;
+      const pass = document.getElementById('loginPass').value;
+      showLoader(true);
+      google.script.run.withSuccessHandler(res => {
+        showLoader(false);
+        if(res.status) {
+          currentUser = res.user;
+          localStorage.setItem('jitupasna_session', JSON.stringify(currentUser));
+          initApp();
+        } else {
+          showModal(res.message);
+        }
+      }).doLogin(email, pass);
+    };
+
+    function initApp() {
+        document.getElementById('authSection').classList.add('hidden');
+        document.getElementById('appSection').classList.remove('hidden');
+        document.getElementById('userInfoArea').classList.remove('hidden');
+        document.getElementById('userStatus').innerHTML = `<i class="fas fa-user me-1"></i> ${currentUser.nama || 'User'}`;
+        
+        google.script.run.withSuccessHandler(data => {
+            document.getElementById('headerKelurahan').innerText = data.kelurahan || "Kelurahan";
+            if(data.infoMessage) {
+                document.getElementById('txtAdminMessage').innerText = data.infoMessage;
+                document.getElementById('adminNotificationArea').classList.remove('hidden');
+            }
+        }).getAppData();
+
+        document.getElementById('profNama').value = currentUser.nama;
+        document.getElementById('profDinas').value = currentUser.dinas;
+        document.getElementById('profHp').value = currentUser.hp;
+
+        if(!currentUser.nama) showPage('pageProfile');
+        else showPage('pageInput'); // Default ke Input
+
+        if(currentUser.role === 'admin') document.getElementById('btnAdminMenu').classList.remove('hidden');
+    }
+
+    // Copy other standard functions (Form Submit, Calculations) here...
+    const inpLuas = document.getElementById('inpLuas');
+    const inpPanjang = document.getElementById('inpPanjang');
+    const outUkuran = document.getElementById('outUkuran');
+    function calculate() {
+      const l = parseFloat(inpLuas.value) || 0;
+      const p = parseFloat(inpPanjang.value) || 0;
+      outUkuran.value = (l * p).toFixed(2);
+    }
+    inpLuas.oninput = calculate;
+    inpPanjang.oninput = calculate;
+
+    document.getElementById('formJitupasna').onsubmit = function(e) {
+      e.preventDefault();
+      const fileInput = document.getElementById('inpFoto');
+      const files = Array.from(fileInput.files);
+      showLoader(true);
+      
+      const submitData = (filesArray) => {
+          const formData = {
+            userEmail: currentUser.email,
+            nama: document.querySelector('[name=nama]').value,
+            alamat: document.querySelector('[name=alamat]').value,
+            rt: document.querySelector('[name=rt]').value,
+            rw: document.querySelector('[name=rw]').value,
+            luas: document.querySelector('[name=luas]').value,
+            panjang: document.querySelector('[name=panjang]').value,
+            ukuran: document.querySelector('[name=ukuran]').value,
+            atap: document.querySelector('[name=atap]').value,
+            dinding: document.querySelector('[name=dinding]').value,
+            lantai: document.querySelector('[name=lantai]').value,
+            pondasi: document.querySelector('[name=pondasi]').value,
+            keterangan: document.querySelector('[name=keterangan]').value,
+            jenisBangunan: document.querySelector('[name=jenisBangunan]').value,
+            njop: document.querySelector('[name=njop]').value,
+            pekerjaan: "", penghasilan: "", jmlKeluarga: "", jmlAnak: "", hilangPenghasilan: "", asetTerdampak: "", kerugianAset: ""
+          };
+          google.script.run.withSuccessHandler(res => {
+            showLoader(false);
+            showModal(res.message);
+            if(res.status) document.getElementById('formJitupasna').reset();
+          }).saveJitupasna(formData, filesArray);
+      };
+
+      if (files.length > 0) {
+          const readFile = (file) => new Promise((resolve) => {
+              const reader = new FileReader();
+              reader.onload = (e) => resolve({name: file.name, mimeType: file.type, data: e.target.result.split(',')[1]});
+              reader.readAsDataURL(file);
+          });
+          Promise.all(files.map(readFile)).then(submitData);
+      } else { submitData([]); }
+    };
+  </script>
 </body>
 </html>
