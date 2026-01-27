@@ -11,6 +11,10 @@
   <!-- Google Fonts (Roboto & Inter) -->
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   
+  <!-- jsPDF for PDF Generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
   <style>
     /* --- BPBD THEME VARIABLES --- */
     :root {
@@ -466,7 +470,7 @@
     </div> <!-- End App Section -->
   </div>
 
-  <!-- MODAL DETAIL (DIPERBARUI DENGAN LEBIH BANYAK INFO) -->
+  <!-- MODAL DETAIL (DIPERBARUI DENGAN LEBIH BANYAK INFO + PDF BUTTON) -->
   <div class="modal fade" id="detailModal" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
       <div class="modal-content border-0 shadow">
@@ -552,6 +556,11 @@
             </div>
         </div>
         <div class="modal-footer bg-light">
+          <button type="button" class="btn btn-outline-primary rounded-pill px-4 me-auto" id="btnCetakPDF"><i class="fas fa-print me-1"></i> Cetak PDF Lengkap</button>
+          
+          <!-- Tombol Hapus (Dinamis via JS) -->
+          <div id="btnDeleteArea"></div>
+          
           <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Tutup</button>
         </div>
       </div>
@@ -710,6 +719,93 @@
         renderDashboard(filtered);
     }
 
+    // --- PDF GENERATOR ---
+    function generatePDF(d) {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        // Header Colors
+        doc.setFillColor(247, 148, 30); // Orange
+        doc.rect(0, 0, 210, 5, 'F');
+        doc.setFillColor(0, 51, 102);   // Blue
+        doc.rect(0, 5, 210, 40, 'F');
+        
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(22);
+        doc.setFont("helvetica", "bold");
+        doc.text("SiJITUPASNA - BPBD DKI", 105, 25, null, null, "center");
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        doc.text("Laporan Verifikasi Kerusakan & Kerugian Pasca Bencana", 105, 35, null, null, "center");
+
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(12);
+        let y = 60;
+
+        doc.setFont("helvetica", "bold");
+        doc.text(`ID Laporan: ${d[0]}`, 20, y); // ID
+        doc.text(`Detail Data Kerusakan:`, 15, y + 8);
+        
+        // Image Handling
+        // Note: Images from external URLs might be blocked by CORS in some contexts
+        // For basic usage without proxy, this might fail for some images.
+        // We will just try or skip.
+        
+        y = 80; 
+
+        const details = [
+            [{content: 'DATA PELAPOR', colSpan: 2, styles: {fillColor: [220, 220, 220], fontStyle: 'bold'}}],
+            ["Nama Lengkap", d[3]],
+            ["Tanggal Input", new Date(d[2]).toLocaleString('id-ID')],
+            ["Pekerjaan", d[18]],
+            ["Penghasilan", `Rp ${(parseFloat(d[19])||0).toLocaleString('id-ID')}`],
+            ["Jumlah Keluarga", `${d[20]} Jiwa`],
+            ["Email", d[1]],
+            
+            [{content: 'LOKASI & BANGUNAN', colSpan: 2, styles: {fillColor: [220, 220, 220], fontStyle: 'bold'}}],
+            ["Alamat", d[4]],
+            ["RT / RW", `${d[5]} / ${d[6]}`],
+            ["Legalitas", d[15]],
+            ["NJOP", `Rp ${(parseFloat(d[16])||0).toLocaleString('id-ID')}`],
+            ["Dimensi", `${d[7]}m x ${d[8]}m (Total ${d[9]} m²)`],
+            
+            [{content: 'ANALISIS KERUSAKAN', colSpan: 2, styles: {fillColor: [220, 220, 220], fontStyle: 'bold'}}],
+            ["Atap", d[10]],
+            ["Dinding", d[11]],
+            ["Lantai", d[12]],
+            ["Pondasi", d[13]],
+            ["Ket. Lain", d[14]],
+            
+            [{content: 'ANALISIS KERUGIAN', colSpan: 2, styles: {fillColor: [220, 220, 220], fontStyle: 'bold'}}],
+            ["Aset Terdampak", d[23]],
+            ["Hilang Penghasilan", `Rp ${(parseFloat(d[22])||0).toLocaleString('id-ID')}`],
+            ["Total Kerugian", `Rp ${(parseFloat(d[24])||0).toLocaleString('id-ID')}`]
+        ];
+
+        doc.autoTable({
+            startY: y,
+            head: [['Parameter', 'Informasi']],
+            body: details,
+            theme: 'grid',
+            headStyles: { fillColor: [247, 148, 30], textColor: [255, 255, 255] },
+            styles: { fontSize: 10, cellPadding: 3 },
+            columnStyles: { 0: { cellWidth: 70 }, 1: { cellWidth: 100 } }, 
+        });
+
+        const finalY = doc.lastAutoTable.finalY + 20;
+        
+        doc.setFontSize(10);
+        doc.text("Petugas Verifikasi,", 140, finalY);
+        doc.line(140, finalY + 25, 190, finalY + 25);
+        doc.text("(...................................)", 140, finalY + 30);
+
+        doc.setFontSize(8);
+        doc.setTextColor(150);
+        doc.text(`Dicetak pada: ${new Date().toLocaleString()}`, 20, finalY + 40);
+        
+        doc.save(`Laporan_SiJITUPASNA_${d[3]}.pdf`);
+    }
+
     function showDetail(index) {
         // Find correct data in cache
         const term = document.getElementById('searchDashboard').value.toLowerCase();
@@ -756,7 +852,100 @@
         const htmlBars = makeBar('Atap', d[10]) + makeBar('Dinding', d[11]) + makeBar('Lantai', d[12]) + makeBar('Pondasi', d[13]);
         document.getElementById('detailDamages').innerHTML = htmlBars;
 
+        // --- BUTTON ACTIONS SETUP ---
+        
+        // 1. PDF Button
+        const btnPDF = document.getElementById('btnCetakPDF');
+        btnPDF.onclick = function() { generatePDF(d); };
+
+        // 2. Delete Button Logic (Owner OR Admin)
+        const btnArea = document.getElementById('btnDeleteArea');
+        btnArea.innerHTML = ''; // Clear prev
+        
+        // Cek: Apakah user adalah Admin ATAU pemilik data (email sama)
+        // row[1] adalah email user penginput
+        if (currentUser && (currentUser.role === 'admin' || currentUser.email === d[1])) {
+            const btnDel = document.createElement('button');
+            btnDel.className = 'btn btn-outline-danger rounded-pill px-4 ms-2';
+            btnDel.innerHTML = '<i class="fas fa-trash me-1"></i> Hapus';
+            btnDel.onclick = function() { deleteItem(d[0]); }; // d[0] is ID
+            btnArea.appendChild(btnDel);
+            
+            // Tambahkan tombol Edit jika perlu (bisa memanggil fungsi editItem dari versi sebelumnya)
+            // Untuk saat ini hanya Hapus sesuai request awal "edit dan menghapus"
+            // Mari kita tambahkan tombol Edit sederhana yang mengisi form
+            const btnEdit = document.createElement('button');
+            btnEdit.className = 'btn btn-warning text-white rounded-pill px-4 ms-2';
+            btnEdit.innerHTML = '<i class="fas fa-edit me-1"></i> Edit';
+            btnEdit.onclick = function() { editItemData(d); };
+            btnArea.appendChild(btnEdit);
+        }
+
         new bootstrap.Modal(document.getElementById('detailModal')).show();
+    }
+
+    // Fungsi Hapus (dipanggil dari Modal)
+    function deleteItem(id) {
+        if(!confirm("Yakin ingin menghapus data ini secara permanen?")) return;
+        showLoader(true);
+        // Pastikan fungsi backend 'deleteDataJitupasna' ada di Code.gs
+        // Kirim email user saat ini untuk validasi di backend juga (safety layer)
+        google.script.run.withSuccessHandler(res => {
+            showLoader(false);
+            showModal(res.message);
+            // Tutup modal detail
+            const modalEl = document.getElementById('detailModal');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if(modal) modal.hide();
+            
+            if(res.status) loadDashboardData(); // Refresh list
+        }).deleteDataJitupasna(id, currentUser.email, currentUser.role === 'admin');
+    }
+
+    // Fungsi Edit (Isi Form)
+    function editItemData(d) {
+        // Tutup modal
+        const modalEl = document.getElementById('detailModal');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if(modal) modal.hide();
+
+        // Pindah ke tab Input
+        showPage('pageInput');
+
+        // Isi Form dengan data (d = array row)
+        // Mapping: 3=Nama, 4=Alamat, 5=RT, 6=RW, 7=Luas, 8=Panjang, 9=Total, 10=Atap, ...
+        document.querySelector('[name=nama]').value = d[3] || "";
+        document.querySelector('[name=alamat]').value = d[4] || "";
+        document.querySelector('[name=rt]').value = (d[5] || "").replace(/'/g, "");
+        document.querySelector('[name=rw]').value = (d[6] || "").replace(/'/g, "");
+        document.getElementById('inpLuas').value = d[7] || "";
+        document.getElementById('inpPanjang').value = d[8] || "";
+        document.getElementById('outUkuran').value = d[9] || "";
+        
+        // Helper set select
+        const setSel = (n, v) => {
+            const el = document.querySelector(`[name=${n}]`);
+            if(el) el.value = v; 
+        };
+        setSel('atap', d[10]);
+        setSel('dinding', d[11]);
+        setSel('lantai', d[12]);
+        setSel('pondasi', d[13]);
+        
+        document.querySelector('[name=keterangan]').value = d[14] || "";
+        setSel('jenisBangunan', d[15]);
+        document.querySelector('[name=njop]').value = d[16] || "";
+        
+        // SosEk
+        document.querySelector('[name=pekerjaan]').value = d[18] || "";
+        document.querySelector('[name=penghasilan]').value = d[19] || "";
+        document.querySelector('[name=jmlKeluarga]').value = d[20] || "";
+        document.querySelector('[name=jmlAnak]').value = d[21] || "";
+        document.querySelector('[name=hilangPenghasilan]').value = d[22] || "";
+        document.querySelector('[name=asetTerdampak]').value = d[23] || "";
+        document.querySelector('[name=kerugianAset]').value = d[24] || "";
+
+        showModal("Data dimuat ke form untuk diedit. Silakan ubah dan kirim ulang (akan tersimpan sebagai data baru/revisi).");
     }
 
     // --- LOGIC LAIN SAMA SEPERTI SEBELUMNYA ---
@@ -836,7 +1025,13 @@
             keterangan: document.querySelector('[name=keterangan]').value,
             jenisBangunan: document.querySelector('[name=jenisBangunan]').value,
             njop: document.querySelector('[name=njop]').value,
-            pekerjaan: "", penghasilan: "", jmlKeluarga: "", jmlAnak: "", hilangPenghasilan: "", asetTerdampak: "", kerugianAset: ""
+            pekerjaan: document.querySelector('[name=pekerjaan]').value,
+            penghasilan: document.querySelector('[name=penghasilan]').value,
+            jmlKeluarga: document.querySelector('[name=jmlKeluarga]').value,
+            jmlAnak: document.querySelector('[name=jmlAnak]').value,
+            hilangPenghasilan: document.querySelector('[name=hilangPenghasilan]').value,
+            asetTerdampak: document.querySelector('[name=asetTerdampak]').value,
+            kerugianAset: document.querySelector('[name=kerugianAset]').value
           };
           google.script.run.withSuccessHandler(res => {
             showLoader(false);
